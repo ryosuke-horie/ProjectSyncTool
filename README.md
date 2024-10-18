@@ -1,5 +1,10 @@
 # GitHub Issue連携自動化ツール【サンプル】
 
+## 動作イメージ
+
+![動作イメージ](/assets/operation_image.gif)
+![連携されたIssue](/assets/issue.jpg)
+
 ## 概要
 
 このプロジェクトは、GitHub Issuesと連携して修正対応項目を自動的に管理するためのツールです。
@@ -26,6 +31,10 @@ GitHubアカウントを持たないユーザーとの協力を効率化し、�
   - 入力内容を基にGitHub Actionsを利用してIssueを自動生成
 - 進捗管理
   - UI上でタスクの進捗状況を「対応済み」に更新可能
+
+## 想定するワークフロー
+
+![想定するワークフロー](/assets/workflow.jpg)
 
 ## システム構成
 
