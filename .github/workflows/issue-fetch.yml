@@ -1,0 +1,50 @@
+name: issue-fetch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync-issues:
+    runs-on: ubuntu-latest
+    env:
+      WORKER_URL: ${{ vars.WORKER_URL }}
+
+    steps:
+      # ステップ1: リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ステップ2: APIから未連携アイテムを取得
+      - name: Fetch unlinked items
+        id: fetch_items
+        run: |
+          response=$(curl -s "$WORKER_URL/items/for-sync")
+          echo "$response"
+          echo "$response" | jq -c '.modifications[]' | while read -r item; do
+            id=$(echo "$item" | jq -r '.id')
+            title=$(echo "$item" | jq -r '.title')
+            details=$(echo "$item" | jq -r '.details')
+            deadline=$(echo "$item" | jq -r '.deadline')
+            
+            echo "Creating issue for: $title"
+            # Issue本文を構築
+            body="**Deadline:** $deadline\n\n**Details:**\n$details"
+            # Issueを作成
+            issue_response=$(gh issue create --title "$title" --body "$body")
+            echo "Issue created: $issue_response"
+            
+            # Issue番号を抽出
+            issue_number=$(echo "$issue_response" | sed 's#.*/##')
+            echo "Issue number: $issue_number"
+          
+            # アイテムを連携済みにマークするためのリクエストを送信
+            curl -s -X POST "$WORKER_URL/items/mark-linked" \
+              -H "Content-Type: application/json" \
+              -d "{\"id\": $id, \"issue_number\": \"$issue_number\"}"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
